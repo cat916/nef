@@ -1,0 +1,102 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  sites     Site[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Site {
+  id            String         @id @default(uuid())
+  name          String
+  location      String
+  vpnAddress    String
+  clientId      String
+  client        Client         @relation(fields: [clientId], references: [id])
+  miningUnits   MiningUnit[]
+  deviceReadings DeviceReading[]
+  alerts        Alert[]
+  billingRecords Billing[]
+  commandLogs   CommandLog[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model MiningUnit {
+  id             String   @id @default(uuid())
+  siteId         String
+  controlBoardId Int
+  minerCount     Int
+  status         String   // 'active', 'inactive', 'maintenance'
+  site           Site     @relation(fields: [siteId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model DeviceReading {
+  id               String   @id @default(uuid())
+  siteId           String
+  deviceId         Int
+  timestamp        DateTime
+  hashRate         Float?
+  temperature      Float?
+  fanSpeed         Int?
+  powerConsumption Float?
+  energyReading    Float?
+  heatMeterReading Float?
+  site             Site     @relation(fields: [siteId], references: [id])
+
+  @@index([siteId, deviceId, timestamp])
+}
+
+model Alert {
+  id        String   @id @default(uuid())
+  siteId    String
+  deviceId  Int
+  type      String
+  value     Float
+  status    String   @default("open") // 'open', 'acknowledged', 'resolved'
+  timestamp DateTime @default(now())
+  site      Site     @relation(fields: [siteId], references: [id])
+
+  @@index([siteId, status])
+}
+
+model Billing {
+  id               String   @id @default(uuid())
+  siteId           String
+  period           DateTime
+  energyConsumption Float
+  amount           Float?
+  status           String   @default("pending") // 'pending', 'processed', 'paid'
+  site             Site     @relation(fields: [siteId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([siteId, period])
+}
+
+model CommandLog {
+  id          String   @id @default(uuid())
+  siteId      String
+  deviceId    Int
+  commandType String
+  parameters  Json?
+  status      String   @default("sent") // 'sent', 'completed', 'failed'
+  timestamp   DateTime @default(now())
+  site        Site     @relation(fields: [siteId], references: [id])
+
+  @@index([siteId, deviceId, timestamp])
+}
