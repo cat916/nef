@@ -4,7 +4,6 @@ import { EventEmitter } from 'events';
 
 // H60S Control Board Register Mappings
 const H60S_REGISTERS = {
-	// Status registers
 	HASH_RATE: 1000,         // Hash rate in TH/s (2 registers)
 	TEMPERATURE: 1002,       // Temperature in Celsius
 	FAN_SPEED: 1003,        // Fan speed in RPM
